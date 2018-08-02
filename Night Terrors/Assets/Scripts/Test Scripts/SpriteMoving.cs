@@ -10,12 +10,24 @@ public class SpriteMoving : MonoBehaviour {
     Interactable interact;
 
 	public GameObject gameCam;
-	bool hasActivatedGame;
+	Camera playerCam;
+	GameObject character;
+	bool hasActivatedGame = false;
+
+	Transform playerCamPosition;
+	Transform gameCamPosition;
 
     void Start()
     {
+		hasActivatedGame = false;
+		moving = false;
         interact = GetComponent<Interactable>();
-		gameCam.SetActive (false);
+		gameCam.GetComponent<Camera> ().enabled = false;
+
+		character = GetCharacter.character;
+		playerCam = GetCharacter.cam;
+
+		gameCamPosition = gameCam.transform;
     }
 
     void Update()
@@ -27,29 +39,32 @@ public class SpriteMoving : MonoBehaviour {
         }
 
 		if (moving) {
-			if (!hasActivatedGame) {
-				gameCam.SetActive (true);
-				GetCharacter.character.GetComponentInChildren<Camera> ().gameObject.SetActive (false);
+			if (!hasActivatedGame) {   //Run Stuff Once
+				character.GetComponent<CharacterMovement> ().enabled = false;
+				character.GetComponent<Collider> ().enabled = false;
+
+				playerCam.transform.SetParent (gameCam.transform);
+
+				playerCamPosition = playerCam.transform;
+				GetCharacter.MovePlayerToPosition (gameCam.transform, null);
+
 				hasActivatedGame = true;
 			}
-
-			GetCharacter.character.GetComponent<CharacterMovement> ().enabled = false;
 
 			Vector3 moveDirection = new Vector3 (0f, Input.GetAxis ("Vertical") * Time.deltaTime, Input.GetAxis ("Horizontal") * Time.deltaTime);
 
 			spriteCharacter.transform.position += moveDirection;
-
-			if (Input.GetButtonDown ("Interact")) {
-				moving = false;
-			}
 		} 
 		else if (!moving)
 		{
 			if (hasActivatedGame)
 			{
-				gameCam.SetActive (false);
-				GetCharacter.character.GetComponent<CharacterMovement> ().enabled = true;
-				GetCharacter.character.GetComponentInChildren<Camera> ().gameObject.SetActive (true);
+				playerCam.transform.SetParent (character.transform);
+
+				playerCam.transform.position = playerCamPosition.position;
+				playerCam.transform.rotation = playerCamPosition.rotation;
+
+				character.GetComponent<CharacterMovement> ().enabled = true;
 				hasActivatedGame = false;
 			}
 		}
